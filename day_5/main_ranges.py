@@ -1,24 +1,8 @@
-import itertools
 import sys
 from dataclasses import dataclass
 from typing import List, Tuple
 
 from tqdm import tqdm
-
-
-def range_gen(ranges: List[Tuple[int, int]]):
-    chained = itertools.chain(
-        *[
-            range(start, start + offset)
-            for start, offset in ranges
-        ]
-    )
-    for num in chained:
-        yield num
-
-
-print(list(range_gen([(0, 5), (7, 3)])))
-assert list(range_gen([(0, 5), (7, 3)])) == [0, 1, 2, 3, 4, 7, 8, 9]
 
 
 @dataclass
@@ -33,33 +17,6 @@ class MoveSpec:
             return self.destination_start + offset
         else:
             return None
-
-
-def move(source, move_specs: List[MoveSpec]):
-    for move_spec in move_specs:
-        if (move := move_spec.move(source)) is not None:
-            return move
-
-    return source
-
-
-assert move(
-    source=79,
-    move_specs=(specs := [
-        MoveSpec(destination_start=50, source_lower_bound=98, source_upper_bound=98 + 2),
-        MoveSpec(destination_start=52, source_lower_bound=50, source_upper_bound=50 + 48),
-    ])
-) == 81
-
-assert move(source=14, move_specs=specs) == 14
-assert move(source=55, move_specs=specs) == 57
-assert move(source=13, move_specs=specs) == 13
-
-
-def move_all(initial, move_specs: List[MoveSpec]):
-    for source in tqdm(initial):
-        yield move(source, move_specs)
-
 
 
 # optimized version
@@ -111,51 +68,12 @@ def move_range(initial: List[Tuple[int, int]], move_specs: List[MoveSpec]) -> Li
 
     return result
 
-# print("move_range")
-# print(move_range(
-# [
-#     (79, 79 + 14),
-#     (55, 55 + 13)
-# ],
-#     move_specs=[
-#         MoveSpec(destination_start=50, source_lower_bound=98, source_upper_bound=98 + 2 - 1),
-#         MoveSpec(destination_start=52, source_lower_bound=50, source_upper_bound=50 + 48 - 1),
-#     ]
-# ))
-#
-# print("move_all")
-# print(list(move_all(
-#
-#     range_gen(
-#         [
-#             (79, 14),
-#             (55, 13)
-#         ]
-#     ),
-#         # (79, 79 + 14),
-#         # (55, 55 + 13)
-#
-#     move_specs=[
-#         MoveSpec(destination_start=50, source_lower_bound=98, source_upper_bound=98 + 2 - 1),
-#         MoveSpec(destination_start=52, source_lower_bound=50, source_upper_bound=50 + 48 - 1),
-#     ]
-# )))
-
-def plan(initial, iterations: List[List[MoveSpec]]):
-    for move_specs in tqdm(iterations):
-        print("Next iteration")
-        initial = move_all(initial, move_specs)
-
-    return min(initial)
-
 
 def plan_range(initial, iterations: List[List[MoveSpec]]):
     for move_specs in tqdm(iterations):
         print("initial: " + str(initial))
         print("move_specs: " + str(move_specs))
         initial = move_range(initial, move_specs)
-
-
 
     return min(
         [start for start, offset in initial if start]
@@ -217,5 +135,3 @@ def main(args):
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-
-# USAGE: python main.py input.txt
